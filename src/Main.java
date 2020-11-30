@@ -36,23 +36,28 @@ public class Main {
 			             .add(BigInteger.valueOf(getCharValue(curChar) + 1));
 		}
 
-		// ceil((value.bitLength() + 1) / 31)
+		// ceil((value.bitLength() + 1) / 30)
 		// Int division always floors, but ceil can be expressed with ((n - 1) / m) +1
 		// Since n = value.bitLength() + 1, the + 1 with the - 1 cancel each other out.
 		// The + 1 is needed because we use an additional bit to store the value of fullCharSet
-		final int length = value.bitLength() / 31 + 1;
+		// Each translation placeholder can hold 30 bits (positive signed int). The first bit is always 1, to ensure
+		// a value > 0
+		final int length = (value.bitLength()) / 30 + 1;
 
 		final int[] placeholders = new int[length];
-		final BigInteger twoPow31 = BigInteger.valueOf(0x80_00_00_00L);
+		final BigInteger twoPow30 = BigInteger.valueOf(0x40_00_00_00);
 
 		for (int i = length -1; i >= 0; i--) {
-			final var divMod = value.divideAndRemainder(twoPow31);
+			final var divMod = value.divideAndRemainder(twoPow30);
 
-			placeholders[i] = divMod[1].intValueExact();
+			placeholders[i] = divMod[1].intValueExact()
+			                  | 0x40_00_00_00;
 			value = divMod[0];
 
-			if (i == 0 && fullCharSet) {
-				placeholders[0] |= 0x40_00_00_00;
+			if (i == 0) {
+				if(fullCharSet) {
+					placeholders[0] |= 0x20_00_00_00;
+				}
 			}
 		}
 
@@ -81,7 +86,7 @@ public class Main {
 	}
 
 	private static void decode(final String encodedNamespace) {
-		if (!encodedNamespace.matches("^(?:%[1-9][0-9]+\\$s)+$")) {
+		if (!encodedNamespace.matches("^(?:%[0-9]+\\$s)+$")) {
 			System.err.printf("invalid encoded namespace %s%n", encodedNamespace);
 			System.exit(-1);
 		}
@@ -91,16 +96,16 @@ public class Main {
 		final int[] placeholders = new int[placeholderStrings.length];
 
 		for (int i = 0; i < placeholders.length; i++) {
-			placeholders[i] = Integer.parseInt(placeholderStrings[i]);
+			placeholders[i] = Integer.parseInt(placeholderStrings[i]) & 0xBF_FF_FF_FF;
 		}
-		boolean fullCharSet = (placeholders[0] & 0x40_00_00_00) > 0;
-		placeholders[0] &= 0xBF_FF_FF_FF;
+		boolean fullCharSet = (placeholders[0] & 0x20_00_00_00) > 0;
+		placeholders[0] &= 0xDF_FF_FF_FF;
 
-		final BigInteger twoPow31 = BigInteger.valueOf(0x80_00_00_00L);
+		final BigInteger twoPow30 = BigInteger.valueOf(0x40_00_00_00L);
 		BigInteger value = BigInteger.ZERO;
 
 		for (int placeholder : placeholders) {
-			value = value.multiply(twoPow31);
+			value = value.multiply(twoPow30);
 			value = value.add(BigInteger.valueOf(placeholder));
 		}
 
