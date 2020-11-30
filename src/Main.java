@@ -54,10 +54,8 @@ public class Main {
 			                  | 0x40_00_00_00;
 			value = divMod[0];
 
-			if (i == 0) {
-				if(fullCharSet) {
-					placeholders[0] |= 0x20_00_00_00;
-				}
+			if (i == 0 && fullCharSet) {
+				placeholders[0] |= 0x20_00_00_00;
 			}
 		}
 
@@ -105,8 +103,8 @@ public class Main {
 		BigInteger value = BigInteger.ZERO;
 
 		for (int placeholder : placeholders) {
-			value = value.multiply(twoPow30);
-			value = value.add(BigInteger.valueOf(placeholder));
+			value = value.multiply(twoPow30)
+			             .add(BigInteger.valueOf(placeholder));
 		}
 
 		final int base = fullCharSet ? 39 : 27;
