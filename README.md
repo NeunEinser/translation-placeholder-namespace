@@ -1,3 +1,10 @@
+# Archival Note
+As of Minecraft version 1.19.4, functionality has been added by Mojang to add a fallback string for translations, in case the client cannot resolve the translation key.
+
+Furthermore, the approach described in this repository is broken, as Minecraft no longer resolves placeholders in translation keys when no fallback is given.
+
+Because of this, this repository has been archived.
+
 # translation-placeholder-namespace
 
 This is a simple java program to transform a Minecraft namespace into a language file placeholder string.  
